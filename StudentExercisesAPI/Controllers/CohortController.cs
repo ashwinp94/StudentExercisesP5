@@ -65,7 +65,7 @@ namespace StudentExercisesAPI.Controllers
                         {
                             Cohort currentCohort = cohorts[cohortid];
 
-                            if (!currentCohort.studentList.Any(x=> x.FirstName == reader.GetString(reader.GetOrdinal("FirstName"))))
+                            if (!currentCohort.studentList.Any(x => x.Id == reader.GetInt32(reader.GetOrdinal("sId"))))
                             {
                                 currentCohort.studentList.Add(
                                     new Student
@@ -78,7 +78,7 @@ namespace StudentExercisesAPI.Controllers
                                 );
                             }
 
-                            if (!currentCohort.instructorList.Any(x => x.FirstName == reader.GetString(reader.GetOrdinal("iFirstName"))))
+                            if (!currentCohort.instructorList.Any(x => x.Id == reader.GetInt32(reader.GetOrdinal("iId"))))
                             {
                                 currentCohort.instructorList.Add(
                                     new Instructor
