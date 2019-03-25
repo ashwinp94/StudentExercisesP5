@@ -38,7 +38,7 @@ namespace StudentExercisesAPI.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = "SELECT Id, FirstName, LastName, SlackHandle, CohortId FROM Student";
+                    cmd.CommandText = $@"SELECT s.Id, s.FirstName, s.LastName, s.SlackHandle, c.CohortName, s.CohortId FROM Student s LEFT JOIN Cohort c ON s.CohortId = c.Id ";
                     SqlDataReader reader = cmd.ExecuteReader();
                     List<Student> students = new List<Student>();
 
@@ -50,7 +50,12 @@ namespace StudentExercisesAPI.Controllers
                             FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
                             LastName = reader.GetString(reader.GetOrdinal("LastName")),
                             SlackHandle = reader.GetString(reader.GetOrdinal("SlackHandle")),
-                            CohortId = reader.GetInt32(reader.GetOrdinal("CohortId"))
+                            CohortId = reader.GetInt32(reader.GetOrdinal("CohortId")),
+                            Cohort = new Cohort
+                            {
+                                Id = reader.GetInt32(reader.GetOrdinal("CohortId")),
+                                CohortName = reader.GetString(reader.GetOrdinal("CohortName"))
+                            }
                         };
 
                         students.Add(student);
@@ -71,9 +76,7 @@ namespace StudentExercisesAPI.Controllers
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
                     cmd.CommandText = @"
-                        SELECT
-                            Id, FirstName, LastName, SlackHandle, CohortId
-                        FROM Student
+                        SELECT s.Id s.FirstName, s.LastName, s.SlackHandle, c.CohortName, s.CohortId FROM Student s LEFT JOIN Cohort c ON s.CohortId = c.Id
                         WHERE Id = @id";
                     cmd.Parameters.Add(new SqlParameter("@id", id));
                     SqlDataReader reader = cmd.ExecuteReader();
@@ -88,7 +91,12 @@ namespace StudentExercisesAPI.Controllers
                             FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
                             LastName = reader.GetString(reader.GetOrdinal("LastName")),
                             SlackHandle = reader.GetString(reader.GetOrdinal("SlackHandle")),
-                            CohortId = reader.GetInt32(reader.GetOrdinal("CohortId"))
+                            CohortId = reader.GetInt32(reader.GetOrdinal("CohortId")),
+                            Cohort = new Cohort
+                            {
+                                Id = reader.GetInt32(reader.GetOrdinal("CohortId")),
+                                CohortName = reader.GetString(reader.GetOrdinal("CohortName"))
+                            }
 
                         };
                     }

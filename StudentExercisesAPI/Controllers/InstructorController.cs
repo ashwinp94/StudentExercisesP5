@@ -38,7 +38,9 @@ namespace StudentExercisesAPI.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = "SELECT Id, FirstName, LastName, SlackHandle, CohortId FROM Instructor";
+                    cmd.CommandText = $@"SELECT i.Id, i.FirstName, i.LastName, i.CohortId, i.SlackHandle, c.CohortName
+                                         FROM Instructor i
+                                         LEFT JOIN Cohort c ON i.CohortId = c.Id ";
                     SqlDataReader reader = cmd.ExecuteReader();
                     List<Instructor> instructors = new List<Instructor>();
 
@@ -50,7 +52,12 @@ namespace StudentExercisesAPI.Controllers
                             FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
                             LastName = reader.GetString(reader.GetOrdinal("LastName")),
                             SlackHandle = reader.GetString(reader.GetOrdinal("SlackHandle")),
-                            CohortId = reader.GetInt32(reader.GetOrdinal("CohortId"))
+                            CohortId = reader.GetInt32(reader.GetOrdinal("CohortId")),
+                            Cohort = new Cohort
+                            {
+                                Id = reader.GetInt32(reader.GetOrdinal("CohortId")),
+                                CohortName = reader.GetString(reader.GetOrdinal("CohortName"))
+                            }
                         };
 
                         instructors.Add(instructor);
@@ -88,7 +95,12 @@ namespace StudentExercisesAPI.Controllers
                             FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
                             LastName = reader.GetString(reader.GetOrdinal("LastName")),
                             SlackHandle = reader.GetString(reader.GetOrdinal("SlackHandle")),
-                            CohortId = reader.GetInt32(reader.GetOrdinal("CohortId"))
+                            CohortId = reader.GetInt32(reader.GetOrdinal("CohortId")),
+                            Cohort = new Cohort
+                            {
+                                Id = reader.GetInt32(reader.GetOrdinal("CohortId")),
+                                CohortName = reader.GetString(reader.GetOrdinal("CohortName"))
+                            }
 
                         };
                     }
