@@ -121,8 +121,8 @@ namespace StudentExercisesAPI.Controllers
                                         JOIN  AssignedExercises er ON s.Id = er.StudentId
                                         JOIN Exercise e on er.ExerciseId = e.Id ";
                     SqlDataReader reader = cmd.ExecuteReader();
-                    Dictionary<int, Student> students = new Dictionary<int, Student>();
 
+                    Dictionary<int, Student> students = new Dictionary<int, Student>();
                     while (reader.Read())
                     {
                         int studentid = reader.GetInt32(reader.GetOrdinal("Id"));
