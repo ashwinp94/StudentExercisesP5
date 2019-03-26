@@ -111,6 +111,47 @@ namespace StudentExercisesAPI.Controllers
             }
         }
 
+        [HttpGet("q={search}", Name = "SearchInstructor")]
+        public async Task<IActionResult> SearchInstructor([FromRoute] string search)
+        {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = $@"SELECT i.Id, i.FirstName, i.LastName, i.CohortId, i.SlackHandle, c.CohortName
+                                         FROM Instructor i
+                                         LEFT JOIN Cohort c ON i.CohortId = c.Id
+                                         WHERE FirstName LIKE '%{search}%' OR LastName LIKE '%{search}%' OR SlackHandle LIKE '%{search}%'";
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    List<Instructor> instructors = new List<Instructor>();
+
+                    while (reader.Read())
+                    {
+                        Instructor instructor = new Instructor
+                        {
+                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                            FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
+                            LastName = reader.GetString(reader.GetOrdinal("LastName")),
+                            SlackHandle = reader.GetString(reader.GetOrdinal("SlackHandle")),
+                            CohortId = reader.GetInt32(reader.GetOrdinal("CohortId")),
+                            Cohort = new Cohort
+                            {
+                                Id = reader.GetInt32(reader.GetOrdinal("CohortId")),
+                                CohortName = reader.GetString(reader.GetOrdinal("CohortName"))
+                            }
+
+                        };
+                        instructors.Add(instructor);
+                    }
+                    reader.Close();
+
+                    return Ok(instructors);
+                }
+            }
+        }
+
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] Instructor instructor)
         {

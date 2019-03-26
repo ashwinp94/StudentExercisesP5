@@ -38,7 +38,7 @@ namespace StudentExercisesAPI.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = $@"SELECT s.Id, s.FirstName, s.LastName, s.SlackHandle, c.CohortName, s.CohortId FROM Student s LEFT JOIN Cohort c ON s.CohortId = c.Id ";
+                    cmd.CommandText = $@"SELECT s.Id, s.FirstName, s.LastName, s.SlackHandle, c.CohortName, s.CohortId FROM Student s LEFT JOIN Cohort c ON s.CohortId = c.Id";
                     SqlDataReader reader = cmd.ExecuteReader();
                     List<Student> students = new List<Student>();
 
@@ -154,6 +154,46 @@ namespace StudentExercisesAPI.Controllers
                         }
 
 
+                    }
+                    reader.Close();
+
+                    return Ok(students);
+                }
+            }
+        }
+
+        [HttpGet("q={search}", Name = "SearchStudent")]
+        public async Task<IActionResult> SearchStudent([FromRoute] string search)
+        {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = $@"SELECT s.Id, s.FirstName, s.LastName, s.SlackHandle, c.CohortName, s.CohortId
+                        FROM Student s LEFT JOIN Cohort c ON s.CohortId = c.Id
+                        WHERE FirstName LIKE '%{search}%' OR LastName LIKE '%{search}%' OR SlackHandle LIKE '%{search}%'";
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    List<Student> students = new List<Student>();
+
+                    while (reader.Read())
+                    {
+                        Student student = new Student
+                        {
+                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                            FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
+                            LastName = reader.GetString(reader.GetOrdinal("LastName")),
+                            SlackHandle = reader.GetString(reader.GetOrdinal("SlackHandle")),
+                            CohortId = reader.GetInt32(reader.GetOrdinal("CohortId")),
+                            Cohort = new Cohort
+                            {
+                                Id = reader.GetInt32(reader.GetOrdinal("CohortId")),
+                                CohortName = reader.GetString(reader.GetOrdinal("CohortName"))
+                            }
+
+                        };
+                        students.Add(student);
                     }
                     reader.Close();
 

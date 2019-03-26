@@ -145,6 +145,39 @@ namespace StudentExercisesAPI.Controllers
             }
         }
 
+        [HttpGet("q={search}", Name = "SearchExercises")]
+        public async Task<IActionResult> SearchExercises([FromRoute] string search)
+        {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = $@"SELECT Id, ExerciseName, [Language]
+                                        FROM Exercise
+                                        WHERE ExerciseName LIKE '%{search}%' OR [Language] LIKE '%{search}%'";
+                    SqlDataReader reader = cmd.ExecuteReader();
+                    List<Exercise> exercises = new List<Exercise>();
+
+                    while (reader.Read())
+                    {
+                        Exercise exercise = new Exercise
+                            {
+                                Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                                ExerciseName = reader.GetString(reader.GetOrdinal("ExerciseName")),
+                                Language = reader.GetString(reader.GetOrdinal("Language")),
+                                assignedStudents = new List<Student>(),
+                            };
+                            exercises.Add(exercise);
+                    }
+                    reader.Close();
+
+                    return Ok(exercises);
+                }
+            }
+        }
+
+
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] Exercise exercise)
         {
