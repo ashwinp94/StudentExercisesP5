@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
+
 
 namespace StudentExercisesAPI.Models
 {
@@ -15,6 +17,7 @@ namespace StudentExercisesAPI.Models
 
         public string LastName { get; set; }
 
+        [StringLength(12, MinimumLength = 3)]
         public string SlackHandle { get; set; }
 
         public int CohortId { get; set; }

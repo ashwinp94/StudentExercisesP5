@@ -18,6 +18,7 @@ namespace StudentExercisesAPI.Models
         public string LastName { get; set; }
 
         [Required]
+        [StringLength(12, MinimumLength = 3)]
         public string SlackHandle { get; set; }
 
         public Cohort Cohort { get; set; }
