@@ -14,5 +14,7 @@ namespace StudentExercisesAPI.Models
 
         public int Id { get; set; }
 
+        public List<Student> assignedStudents {get; set;}
+
     }
 }

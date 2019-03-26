@@ -94,6 +94,57 @@ namespace StudentExercisesAPI.Controllers
             }
         }
 
+        [HttpGet("include=student", Name = "GetExerciseWithStudent")]
+        public async Task<IActionResult> GetExerciseWithStudent([FromRoute] string include)
+        {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = $@"SELECT s.FirstName, s.LastName, e.ExerciseName, e.[Language], er.StudentId, er.ExerciseId, e.Id as eId, s.Id, s.SlackHandle, s.CohortId
+                                        FROM Exercise e
+                                        JOIN  AssignedExercises er ON e.Id = er.StudentId
+                                        JOIN Student s on er.ExerciseId = s.Id";
+                    SqlDataReader reader = cmd.ExecuteReader();
+                    Dictionary<int, Exercise> exercises = new Dictionary<int, Exercise>();
+
+                    while (reader.Read())
+                    {
+                        int exerciseid = reader.GetInt32(reader.GetOrdinal("eId"));
+
+                        if (!exercises.ContainsKey(exerciseid))
+                        {
+                            Exercise exercise = new Exercise {
+                                Id = exerciseid,
+                                ExerciseName = reader.GetString(reader.GetOrdinal("ExerciseName")),
+                                Language = reader.GetString(reader.GetOrdinal("Language")),
+                                assignedStudents = new List<Student>(),
+                            };
+                            exercises.Add(exerciseid, exercise);
+                        }
+                        if (!reader.IsDBNull(reader.GetOrdinal("Id")))
+                        {
+                            Exercise currentExercise = exercises[exerciseid];
+                            currentExercise.assignedStudents.Add(
+                                new Student
+                                {
+                                    Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                                    FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
+                                    LastName = reader.GetString(reader.GetOrdinal("LastName")),
+                                }
+                            );
+                        }
+
+
+                    }
+                    reader.Close();
+
+                    return Ok(exercises);
+                }
+            }
+        }
+
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] Exercise exercise)
         {
