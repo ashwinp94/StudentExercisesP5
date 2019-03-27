@@ -114,11 +114,10 @@ namespace StudentExercisesAPI.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"
-                        SELECT
-                            Id, FirstName, LastName, SlackHandle, CohortId
-                        FROM Instructor
-                        WHERE Id = @id";
+                cmd.CommandText =    $@"SELECT i.Id, i.FirstName, i.LastName, i.CohortId, i.SlackHandle, c.CohortName
+                                        FROM Instructor i
+                                        LEFT JOIN Cohort c ON i.CohortId = c.Id
+                                        WHERE i.Id = @id";
                     cmd.Parameters.Add(new SqlParameter("@id", id));
                     SqlDataReader reader = cmd.ExecuteReader();
 

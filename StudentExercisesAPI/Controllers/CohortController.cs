@@ -108,7 +108,19 @@ namespace StudentExercisesAPI.Controllers
                     }
                     else
                     {
-                        cmd.CommandText = "SELECT c.Id as CohortId, s.Id as sId, s.CohortId as sCohortId, c.CohortName, s.FirstName, s.LastName, i.FirstName as iFirstName, i.LastName as iLastName, i.CohortId as iCohortId, i.Id as iId FROM Cohort c JOIN Student s ON s.CohortId = c.Id JOIN Instructor i on i.CohortId = c.Id";
+                        cmd.CommandText = "SELECT c.Id as CohortId, " +
+                                            "s.Id as sId, " +
+                                            "s.CohortId as sCohortId, " +
+                                            "c.CohortName, " +
+                                            "s.FirstName, " +
+                                            "s.LastName, " +
+                                            "i.FirstName as iFirstName, " +
+                                            "i.LastName as iLastName, " +
+                                            "i.CohortId as iCohortId, " +
+                                            "i.Id as iId " +
+                                            "FROM Cohort c " +
+                                            "JOIN Student s ON s.CohortId = c.Id " +
+                                            "JOIN Instructor i on i.CohortId = c.Id";
                         SqlDataReader reader = cmd.ExecuteReader();
 
                         Dictionary<int, Cohort> cohorts = new Dictionary<int, Cohort>();
@@ -179,13 +191,26 @@ namespace StudentExercisesAPI.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = "SELECT c.Id as CohortId, s.Id as sId, s.CohortId as sCohortId, c.CohortName, s.FirstName, s.LastName, i.FirstName as iFirstName, i.LastName as iLastName, i.CohortId as iCohortId, i.Id as iId FROM Cohort c JOIN Student s ON s.CohortId = c.Id JOIN Instructor i on i.CohortId = c.Id WHERE c.Id = @id";
+                    cmd.CommandText = "SELECT c.Id as CohortId, " +
+                                        "s.Id as sId, " +
+                                        "s.CohortId as sCohortId, " +
+                                        "c.CohortName, " +
+                                        "s.FirstName, " +
+                                        "s.LastName, " +
+                                        "i.FirstName as iFirstName, " +
+                                        "i.LastName as iLastName, " +
+                                        "i.CohortId as iCohortId, " +
+                                        "i.Id as iId " +
+                                        "FROM Cohort c " +
+                                        "JOIN Student s ON s.CohortId = c.Id " +
+                                        "JOIN Instructor i on i.CohortId = c.Id WHERE c.Id = @id";
+
                     cmd.Parameters.Add(new SqlParameter("@id", id));
                     SqlDataReader reader = cmd.ExecuteReader();
 
                     Dictionary<int, Cohort> cohorts = new Dictionary<int, Cohort>();
 
-                    if (reader.Read())
+                    while(reader.Read())
                     {
                         int cohortid = reader.GetInt32(reader.GetOrdinal("CohortId"));
 

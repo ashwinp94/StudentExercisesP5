@@ -160,10 +160,13 @@ namespace StudentExercisesAPI.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"
-                        SELECT s.Id s.FirstName, s.LastName, s.SlackHandle, c.CohortName, s.CohortId FROM Student s LEFT JOIN Cohort c ON s.CohortId = c.Id
-                        WHERE Id = @id";
+                    cmd.CommandText = $@"SELECT s.Id s.FirstName, s.LastName, s.SlackHandle, c.CohortName, s.CohortId 
+                                        FROM Student s 
+                                        LEFT JOIN Cohort c ON s.CohortId = c.Id
+                                        WHERE s.Id = @id";
+
                     cmd.Parameters.Add(new SqlParameter("@id", id));
+
                     SqlDataReader reader = cmd.ExecuteReader();
 
                     Student student = null;
