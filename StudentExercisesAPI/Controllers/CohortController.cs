@@ -114,7 +114,7 @@ namespace StudentExercisesAPI.Controllers
 
                     Dictionary<int, Cohort> cohorts = new Dictionary<int, Cohort>();
 
-                    while (reader.Read())
+                    if (reader.Read())
                     {
                         int cohortid = reader.GetInt32(reader.GetOrdinal("CohortId"));
 
@@ -179,9 +179,10 @@ namespace StudentExercisesAPI.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = $@"SELECT c.Id as CohortId, s.Id as sId, s.CohortId as sCohortId, c.CohortName, s.FirstName, s.LastName, i.FirstName as iFirstName, i.LastName as iLastName, i.CohortId as iCohortId, i.Id as iId 
-                        FROM Cohort c JOIN Student s ON s.CohortId = c.Id JOIN Instructor i on i.CohortId = c.Id
-                        Where CohortName LIKE '%{search}%'";
+                    cmd.CommandText = $@"SELECT c.Id as CohortId, s.Id as sId, s.CohortId as sCohortId, c.CohortName, s.FirstName, s.LastName, i.FirstName as iFirstName, 
+                                        i.LastName as iLastName, i.CohortId as iCohortId, i.Id as iId 
+                                        FROM Cohort c JOIN Student s ON s.CohortId = c.Id JOIN Instructor i on i.CohortId = c.Id
+                                        Where CohortName LIKE '%{search}%'";
                     SqlDataReader reader = cmd.ExecuteReader();
 
                     Dictionary<int, Cohort> cohorts = new Dictionary<int, Cohort>();

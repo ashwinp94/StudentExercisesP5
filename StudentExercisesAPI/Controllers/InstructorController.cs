@@ -38,6 +38,7 @@ namespace StudentExercisesAPI.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
+
                     cmd.CommandText = $@"SELECT i.Id, i.FirstName, i.LastName, i.CohortId, i.SlackHandle, c.CohortName
                                          FROM Instructor i
                                          LEFT JOIN Cohort c ON i.CohortId = c.Id ";

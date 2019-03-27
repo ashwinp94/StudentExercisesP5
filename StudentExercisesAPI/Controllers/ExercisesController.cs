@@ -31,31 +31,78 @@ namespace StudentExercisesAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> Get(string include)
         {
             using (SqlConnection conn = Connection)
             {
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = "SELECT Id, ExerciseName, Language FROM Exercise";
-                    SqlDataReader reader = cmd.ExecuteReader();
-                    List<Exercise> exercises = new List<Exercise>();
-
-                    while (reader.Read())
+                    if (include == "student")
                     {
-                        Exercise exercise = new Exercise
+                        cmd.CommandText = $@"SELECT s.FirstName, s.LastName, e.ExerciseName, e.[Language], er.StudentId, er.ExerciseId, e.Id as eId, s.Id, s.SlackHandle, s.CohortId
+                                        FROM Exercise e
+                                        JOIN  AssignedExercises er ON e.Id = er.StudentId
+                                        JOIN Student s on er.ExerciseId = s.Id";
+                        SqlDataReader reader = cmd.ExecuteReader();
+                        Dictionary<int, Exercise> exercises = new Dictionary<int, Exercise>();
+
+                        while (reader.Read())
                         {
-                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                            ExerciseName = reader.GetString(reader.GetOrdinal("ExerciseName")),
-                            Language = reader.GetString(reader.GetOrdinal("Language"))
-                        };
+                            int exerciseid = reader.GetInt32(reader.GetOrdinal("eId"));
 
-                        exercises.Add(exercise);
+                            if (!exercises.ContainsKey(exerciseid))
+                            {
+                                Exercise exercise = new Exercise
+                                {
+                                    Id = exerciseid,
+                                    ExerciseName = reader.GetString(reader.GetOrdinal("ExerciseName")),
+                                    Language = reader.GetString(reader.GetOrdinal("Language")),
+                                    assignedStudents = new List<Student>(),
+                                };
+                                exercises.Add(exerciseid, exercise);
+                            }
+                            if (!reader.IsDBNull(reader.GetOrdinal("Id")))
+                            {
+                                Exercise currentExercise = exercises[exerciseid];
+                                currentExercise.assignedStudents.Add(
+                                    new Student
+                                    {
+                                        Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                                        FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
+                                        LastName = reader.GetString(reader.GetOrdinal("LastName")),
+                                    }
+                                );
+                            }
+
+
+                        }
+                        reader.Close();
+
+                        return Ok(exercises);
                     }
-                    reader.Close();
+                    else
+                    {
+                        cmd.CommandText = "SELECT Id, ExerciseName, Language FROM Exercise";
+                        SqlDataReader reader = cmd.ExecuteReader();
+                        List<Exercise> exercises = new List<Exercise>();
 
-                    return Ok(exercises);
+                        while (reader.Read())
+                        {
+                            Exercise exercise = new Exercise
+                            {
+                                Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                                ExerciseName = reader.GetString(reader.GetOrdinal("ExerciseName")),
+                                Language = reader.GetString(reader.GetOrdinal("Language"))
+                            };
+
+                            exercises.Add(exercise);
+                        }
+                        reader.Close();
+
+                        return Ok(exercises);
+                        
+                    }
                 }
             }
         }
@@ -94,56 +141,56 @@ namespace StudentExercisesAPI.Controllers
             }
         }
 
-        [HttpGet("include=student", Name = "GetExerciseWithStudent")]
-        public async Task<IActionResult> GetExerciseWithStudent([FromRoute] string include)
-        {
-            using (SqlConnection conn = Connection)
-            {
-                conn.Open();
-                using (SqlCommand cmd = conn.CreateCommand())
-                {
-                    cmd.CommandText = $@"SELECT s.FirstName, s.LastName, e.ExerciseName, e.[Language], er.StudentId, er.ExerciseId, e.Id as eId, s.Id, s.SlackHandle, s.CohortId
-                                        FROM Exercise e
-                                        JOIN  AssignedExercises er ON e.Id = er.StudentId
-                                        JOIN Student s on er.ExerciseId = s.Id";
-                    SqlDataReader reader = cmd.ExecuteReader();
-                    Dictionary<int, Exercise> exercises = new Dictionary<int, Exercise>();
+        //[HttpGet("include=student", Name = "GetExerciseWithStudent")]
+        //public async Task<IActionResult> GetExerciseWithStudent([FromRoute] string include)
+        //{
+        //    using (SqlConnection conn = Connection)
+        //    {
+        //        conn.Open();
+        //        using (SqlCommand cmd = conn.CreateCommand())
+        //        {
+        //            cmd.CommandText = $@"SELECT s.FirstName, s.LastName, e.ExerciseName, e.[Language], er.StudentId, er.ExerciseId, e.Id as eId, s.Id, s.SlackHandle, s.CohortId
+        //                                FROM Exercise e
+        //                                JOIN  AssignedExercises er ON e.Id = er.StudentId
+        //                                JOIN Student s on er.ExerciseId = s.Id";
+        //            SqlDataReader reader = cmd.ExecuteReader();
+        //            Dictionary<int, Exercise> exercises = new Dictionary<int, Exercise>();
 
-                    while (reader.Read())
-                    {
-                        int exerciseid = reader.GetInt32(reader.GetOrdinal("eId"));
+        //            while (reader.Read())
+        //            {
+        //                int exerciseid = reader.GetInt32(reader.GetOrdinal("eId"));
 
-                        if (!exercises.ContainsKey(exerciseid))
-                        {
-                            Exercise exercise = new Exercise {
-                                Id = exerciseid,
-                                ExerciseName = reader.GetString(reader.GetOrdinal("ExerciseName")),
-                                Language = reader.GetString(reader.GetOrdinal("Language")),
-                                assignedStudents = new List<Student>(),
-                            };
-                            exercises.Add(exerciseid, exercise);
-                        }
-                        if (!reader.IsDBNull(reader.GetOrdinal("Id")))
-                        {
-                            Exercise currentExercise = exercises[exerciseid];
-                            currentExercise.assignedStudents.Add(
-                                new Student
-                                {
-                                    Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                                    FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
-                                    LastName = reader.GetString(reader.GetOrdinal("LastName")),
-                                }
-                            );
-                        }
+        //                if (!exercises.ContainsKey(exerciseid))
+        //                {
+        //                    Exercise exercise = new Exercise {
+        //                        Id = exerciseid,
+        //                        ExerciseName = reader.GetString(reader.GetOrdinal("ExerciseName")),
+        //                        Language = reader.GetString(reader.GetOrdinal("Language")),
+        //                        assignedStudents = new List<Student>(),
+        //                    };
+        //                    exercises.Add(exerciseid, exercise);
+        //                }
+        //                if (!reader.IsDBNull(reader.GetOrdinal("Id")))
+        //                {
+        //                    Exercise currentExercise = exercises[exerciseid];
+        //                    currentExercise.assignedStudents.Add(
+        //                        new Student
+        //                        {
+        //                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
+        //                            FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
+        //                            LastName = reader.GetString(reader.GetOrdinal("LastName")),
+        //                        }
+        //                    );
+        //                }
 
 
-                    }
-                    reader.Close();
+        //            }
+        //            reader.Close();
 
-                    return Ok(exercises);
-                }
-            }
-        }
+        //            return Ok(exercises);
+        //        }
+        //    }
+        //}
 
         [HttpGet("q={search}", Name = "SearchExercises")]
         public async Task<IActionResult> SearchExercises([FromRoute] string search)
