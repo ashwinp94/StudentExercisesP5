@@ -31,41 +31,77 @@ namespace StudentExercisesAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> Get(string q)
         {
             using (SqlConnection conn = Connection)
             {
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
+                    if (q != null)
+                    {
+                        cmd.CommandText = $@"SELECT i.Id, i.FirstName, i.LastName, i.CohortId, i.SlackHandle, c.CohortName
+                                         FROM Instructor i
+                                         LEFT JOIN Cohort c ON i.CohortId = c.Id
+                                         WHERE FirstName LIKE @b OR LastName LIKE @b OR SlackHandle LIKE @b";
 
-                    cmd.CommandText = $@"SELECT i.Id, i.FirstName, i.LastName, i.CohortId, i.SlackHandle, c.CohortName
+                        cmd.Parameters.Add(new SqlParameter("@b", $"%{q}%"));
+                        SqlDataReader reader = cmd.ExecuteReader();
+
+                        List<Instructor> instructors = new List<Instructor>();
+
+                        while (reader.Read())
+                        {
+                            Instructor instructor = new Instructor
+                            {
+                                Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                                FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
+                                LastName = reader.GetString(reader.GetOrdinal("LastName")),
+                                SlackHandle = reader.GetString(reader.GetOrdinal("SlackHandle")),
+                                CohortId = reader.GetInt32(reader.GetOrdinal("CohortId")),
+                                Cohort = new Cohort
+                                {
+                                    Id = reader.GetInt32(reader.GetOrdinal("CohortId")),
+                                    CohortName = reader.GetString(reader.GetOrdinal("CohortName"))
+                                }
+
+                            };
+                            instructors.Add(instructor);
+                        }
+                        reader.Close();
+
+                        return Ok(instructors);
+                    }
+                    else
+                    {
+                        cmd.CommandText = $@"SELECT i.Id, i.FirstName, i.LastName, i.CohortId, i.SlackHandle, c.CohortName
                                          FROM Instructor i
                                          LEFT JOIN Cohort c ON i.CohortId = c.Id ";
-                    SqlDataReader reader = cmd.ExecuteReader();
-                    List<Instructor> instructors = new List<Instructor>();
+                        SqlDataReader reader = cmd.ExecuteReader();
+                        List<Instructor> instructors = new List<Instructor>();
 
-                    while (reader.Read())
-                    {
-                        Instructor instructor = new Instructor
+                        while (reader.Read())
                         {
-                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                            FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
-                            LastName = reader.GetString(reader.GetOrdinal("LastName")),
-                            SlackHandle = reader.GetString(reader.GetOrdinal("SlackHandle")),
-                            CohortId = reader.GetInt32(reader.GetOrdinal("CohortId")),
-                            Cohort = new Cohort
+                            Instructor instructor = new Instructor
                             {
-                                Id = reader.GetInt32(reader.GetOrdinal("CohortId")),
-                                CohortName = reader.GetString(reader.GetOrdinal("CohortName"))
-                            }
-                        };
+                                Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                                FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
+                                LastName = reader.GetString(reader.GetOrdinal("LastName")),
+                                SlackHandle = reader.GetString(reader.GetOrdinal("SlackHandle")),
+                                CohortId = reader.GetInt32(reader.GetOrdinal("CohortId")),
+                                Cohort = new Cohort
+                                {
+                                    Id = reader.GetInt32(reader.GetOrdinal("CohortId")),
+                                    CohortName = reader.GetString(reader.GetOrdinal("CohortName"))
+                                }
+                            };
 
-                        instructors.Add(instructor);
+                            instructors.Add(instructor);
+                        }
+                        reader.Close();
+
+                        return Ok(instructors);
                     }
-                    reader.Close();
-
-                    return Ok(instructors);
                 }
             }
         }
@@ -108,47 +144,6 @@ namespace StudentExercisesAPI.Controllers
                     reader.Close();
 
                     return Ok(instructor);
-                }
-            }
-        }
-
-        [HttpGet("q={search}", Name = "SearchInstructor")]
-        public async Task<IActionResult> SearchInstructor([FromRoute] string search)
-        {
-            using (SqlConnection conn = Connection)
-            {
-                conn.Open();
-                using (SqlCommand cmd = conn.CreateCommand())
-                {
-                    cmd.CommandText = $@"SELECT i.Id, i.FirstName, i.LastName, i.CohortId, i.SlackHandle, c.CohortName
-                                         FROM Instructor i
-                                         LEFT JOIN Cohort c ON i.CohortId = c.Id
-                                         WHERE FirstName LIKE '%{search}%' OR LastName LIKE '%{search}%' OR SlackHandle LIKE '%{search}%'";
-                    SqlDataReader reader = cmd.ExecuteReader();
-
-                    List<Instructor> instructors = new List<Instructor>();
-
-                    while (reader.Read())
-                    {
-                        Instructor instructor = new Instructor
-                        {
-                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                            FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
-                            LastName = reader.GetString(reader.GetOrdinal("LastName")),
-                            SlackHandle = reader.GetString(reader.GetOrdinal("SlackHandle")),
-                            CohortId = reader.GetInt32(reader.GetOrdinal("CohortId")),
-                            Cohort = new Cohort
-                            {
-                                Id = reader.GetInt32(reader.GetOrdinal("CohortId")),
-                                CohortName = reader.GetString(reader.GetOrdinal("CohortName"))
-                            }
-
-                        };
-                        instructors.Add(instructor);
-                    }
-                    reader.Close();
-
-                    return Ok(instructors);
                 }
             }
         }
