@@ -2,12 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
 
 namespace StudentExercisesAPI.Models
 {
     public class Cohort
     {
 
+        [Required]
+        [StringLength(11, MinimumLength = 5)]
         public string CohortName { get; set; }
 
         public int Id { get; set; }

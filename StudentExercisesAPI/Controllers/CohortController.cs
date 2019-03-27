@@ -114,6 +114,79 @@ namespace StudentExercisesAPI.Controllers
 
                     Dictionary<int, Cohort> cohorts = new Dictionary<int, Cohort>();
 
+                    if (reader.Read())
+                    {
+                        int cohortid = reader.GetInt32(reader.GetOrdinal("CohortId"));
+
+                        if (!cohorts.ContainsKey(cohortid))
+                        {
+                            Cohort cohort = new Cohort
+                            {
+                                Id = cohortid,
+                                CohortName = reader.GetString(reader.GetOrdinal("CohortName")),
+                                studentList = new List<Student>(),
+                                instructorList = new List<Instructor>()
+                            };
+
+                            cohorts.Add(cohortid, cohort);
+
+                        }
+
+                        if (!reader.IsDBNull(reader.GetOrdinal("sCohortId")))
+                        {
+                            Cohort currentCohort = cohorts[cohortid];
+
+                            if (!currentCohort.studentList.Any(x => x.Id == reader.GetInt32(reader.GetOrdinal("sId"))))
+                            {
+                                currentCohort.studentList.Add(
+                                    new Student
+                                    {
+                                        Id = reader.GetInt32(reader.GetOrdinal("sId")),
+                                        FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
+                                        LastName = reader.GetString(reader.GetOrdinal("LastName")),
+                                        CohortId = reader.GetInt32(reader.GetOrdinal("sCohortId")),
+                                    }
+                                );
+                            }
+
+                            if (!currentCohort.instructorList.Any(x => x.Id == reader.GetInt32(reader.GetOrdinal("iId"))))
+                            {
+                                currentCohort.instructorList.Add(
+                                    new Instructor
+                                    {
+                                        Id = reader.GetInt32(reader.GetOrdinal("iId")),
+                                        FirstName = reader.GetString(reader.GetOrdinal("iFirstName")),
+                                        LastName = reader.GetString(reader.GetOrdinal("iLastName")),
+                                        CohortId = reader.GetInt32(reader.GetOrdinal("iCohortId")),
+                                    }
+                                );
+                            }
+                        }
+
+                    }
+                    reader.Close();
+
+                    return Ok(cohorts);
+                }
+            }
+        }
+
+        [HttpGet("q={search}", Name = "SearchCohorts")]
+        public async Task<IActionResult> SearchCohorts([FromRoute]string search)
+        {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = $@"SELECT c.Id as CohortId, s.Id as sId, s.CohortId as sCohortId, c.CohortName, s.FirstName, s.LastName, i.FirstName as iFirstName, 
+                                        i.LastName as iLastName, i.CohortId as iCohortId, i.Id as iId 
+                                        FROM Cohort c JOIN Student s ON s.CohortId = c.Id JOIN Instructor i on i.CohortId = c.Id
+                                        Where CohortName LIKE '%{search}%'";
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    Dictionary<int, Cohort> cohorts = new Dictionary<int, Cohort>();
+
                     while (reader.Read())
                     {
                         int cohortid = reader.GetInt32(reader.GetOrdinal("CohortId"));
