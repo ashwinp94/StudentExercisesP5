@@ -43,25 +43,43 @@ namespace StudentExercisesAPI.Controllers
                         cmd.CommandText = $@"SELECT s.FirstName, s.LastName, e.ExerciseName, e.[Language], er.StudentId, er.ExerciseId, e.Id as eId, s.Id, s.SlackHandle, s.CohortId
                                         FROM Exercise e
                                         JOIN  AssignedExercises er ON e.Id = er.StudentId
-                                        JOIN Student s on er.ExerciseId = s.Id";
-                        SqlDataReader reader = cmd.ExecuteReader();
-                        Dictionary<int, Exercise> exercises = new Dictionary<int, Exercise>();
+                                        JOIN Student s on er.ExerciseId = s.Id
+                                        WHERE 1 = 1";
+                    }
+                    else
+                    {
+                        cmd.CommandText = @"SELECT s.FirstName, s.LastName, e.ExerciseName, e.[Language], er.StudentId, er.ExerciseId, e.Id as eId, s.Id, s.SlackHandle, s.CohortId
+                                        FROM Exercise e
+                                        JOIN AssignedExercises er ON e.Id = er.StudentId
+                                        JOIN Student s on er.ExerciseId = s.Id
+                                        WHERE 1 = 1";
+                    }
+                    if (!string.IsNullOrWhiteSpace(q))
+                    {
+                        cmd.CommandText += @" AND ExerciseName LIKE @b OR [Language] LIKE @b";
+                        cmd.Parameters.Add(new SqlParameter("@b", $"%{q}%"));
+                    }
 
-                        while (reader.Read())
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    Dictionary<int, Exercise> exercises = new Dictionary<int, Exercise>();
+                    while (reader.Read())
+                    {
+                        int exerciseid = reader.GetInt32(reader.GetOrdinal("eId"));
+
+                        if (!exercises.ContainsKey(exerciseid))
                         {
-                            int exerciseid = reader.GetInt32(reader.GetOrdinal("eId"));
-
-                            if (!exercises.ContainsKey(exerciseid))
+                            Exercise exercise = new Exercise
                             {
-                                Exercise exercise = new Exercise
-                                {
-                                    Id = exerciseid,
-                                    ExerciseName = reader.GetString(reader.GetOrdinal("ExerciseName")),
-                                    Language = reader.GetString(reader.GetOrdinal("Language")),
-                                    assignedStudents = new List<Student>(),
-                                };
-                                exercises.Add(exerciseid, exercise);
-                            }
+                                Id = exerciseid,
+                                ExerciseName = reader.GetString(reader.GetOrdinal("ExerciseName")),
+                                Language = reader.GetString(reader.GetOrdinal("Language")),
+                                assignedStudents = new List<Student>(),
+                            };
+                            exercises.Add(exerciseid, exercise);
+                        }
+                        if (include == "student")
+                        {
                             if (!reader.IsDBNull(reader.GetOrdinal("Id")))
                             {
                                 Exercise currentExercise = exercises[exerciseid];
@@ -74,63 +92,17 @@ namespace StudentExercisesAPI.Controllers
                                     }
                                 );
                             }
-
-
                         }
-                        reader.Close();
-
-                        return Ok(exercises);
                     }
+                reader.Close();
 
-                   else if (q != null)
-                    {
-                        cmd.CommandText = $@"SELECT Id, ExerciseName, [Language]
-                                        FROM Exercise
-                                        WHERE ExerciseName LIKE @b OR [Language] LIKE @b";
-                        cmd.Parameters.Add(new SqlParameter("@b", $"%{q}%"));
-                        SqlDataReader reader = cmd.ExecuteReader();
-                        List<Exercise> exercises = new List<Exercise>();
+                return Ok(exercises);
 
-                        while (reader.Read())
-                        {
-                            Exercise exercise = new Exercise
-                            {
-                                Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                                ExerciseName = reader.GetString(reader.GetOrdinal("ExerciseName")),
-                                Language = reader.GetString(reader.GetOrdinal("Language")),
-                                assignedStudents = new List<Student>(),
-                            };
-                            exercises.Add(exercise);
-                        }
-                        reader.Close();
-
-                        return Ok(exercises);
-                    }
-                    else
-                    {
-                        cmd.CommandText = "SELECT Id, ExerciseName, Language FROM Exercise";
-                        SqlDataReader reader = cmd.ExecuteReader();
-                        List<Exercise> exercises = new List<Exercise>();
-
-                        while (reader.Read())
-                        {
-                            Exercise exercise = new Exercise
-                            {
-                                Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                                ExerciseName = reader.GetString(reader.GetOrdinal("ExerciseName")),
-                                Language = reader.GetString(reader.GetOrdinal("Language"))
-                            };
-
-                            exercises.Add(exercise);
-                        }
-                        reader.Close();
-
-                        return Ok(exercises);
-                        
-                    }
-                }
             }
         }
+    }
+   
+
 
         [HttpGet("{id}", Name = "GetExercise")]
         public async Task<IActionResult> Get([FromRoute] int id)
