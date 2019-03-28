@@ -97,7 +97,7 @@ namespace StudentExercisesAPI.Controllers
                         }
                         reader.Close();
 
-                        return Ok(students);
+                        return Ok(students.Values);
                     }
       
                 }
@@ -105,7 +105,7 @@ namespace StudentExercisesAPI.Controllers
    
 
         [HttpGet("{id}", Name = "GetStudent")]
-        public async Task<IActionResult> Get([FromRoute] int id)
+        public async Task<IActionResult> GetStudent([FromRoute] int id)
         {
             using (SqlConnection conn = Connection)
             {
@@ -161,7 +161,7 @@ namespace StudentExercisesAPI.Controllers
                                         VALUES (@firstname, @lastname, @slackhandle, @cohortId)";
                     cmd.Parameters.Add(new SqlParameter("@firstname", student.FirstName));
                     cmd.Parameters.Add(new SqlParameter("@lastname", student.LastName));
-                    cmd.Parameters.Add(new SqlParameter("@language", student.SlackHandle));
+                    cmd.Parameters.Add(new SqlParameter("@slackhandle", student.SlackHandle));
                     cmd.Parameters.Add(new SqlParameter("@cohortId", student.CohortId));
 
                     int newId = (int)cmd.ExecuteScalar();
@@ -183,13 +183,13 @@ namespace StudentExercisesAPI.Controllers
                     {
                         cmd.CommandText = @"UPDATE Student
                                             SET FirstName = @name,
-                                                LastName = @LastName
-                                                SlackHandle = @SlackHandle
+                                                LastName = @LastName,
+                                                SlackHandle = @SlackHandle,
                                                 CohortId = @cohortId
                                             WHERE Id = @id";
                         cmd.Parameters.Add(new SqlParameter("@name", student.FirstName));
                         cmd.Parameters.Add(new SqlParameter("@LastName", student.LastName));
-                        cmd.Parameters.Add(new SqlParameter("@language", student.SlackHandle));
+                        cmd.Parameters.Add(new SqlParameter("@SlackHandle", student.SlackHandle));
                         cmd.Parameters.Add(new SqlParameter("@cohortId", student.CohortId));
                         cmd.Parameters.Add(new SqlParameter("@id", id));
 
@@ -225,7 +225,8 @@ namespace StudentExercisesAPI.Controllers
                     conn.Open();
                     using (SqlCommand cmd = conn.CreateCommand())
                     {
-                        cmd.CommandText = @"DELETE FROM Student WHERE Id = @id";
+                        cmd.CommandText = @"DELETE FROM AssignedExercises WHERE StudentId = @id
+                                            Delete from Student WHERE Id = @id";
                         cmd.Parameters.Add(new SqlParameter("@id", id));
 
                         int rowsAffected = cmd.ExecuteNonQuery();

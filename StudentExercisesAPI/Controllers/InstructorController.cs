@@ -130,7 +130,7 @@ namespace StudentExercisesAPI.Controllers
                                         VALUES (@firstname, @lastname, @slackhandle, @cohortId)";
                     cmd.Parameters.Add(new SqlParameter("@firstname", instructor.FirstName));
                     cmd.Parameters.Add(new SqlParameter("@lastname", instructor.LastName));
-                    cmd.Parameters.Add(new SqlParameter("@language", instructor.SlackHandle));
+                    cmd.Parameters.Add(new SqlParameter("@slackhandle", instructor.SlackHandle));
                     cmd.Parameters.Add(new SqlParameter("@cohortId", instructor.CohortId));
 
                     int newId = (int)cmd.ExecuteScalar();
